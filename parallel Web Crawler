@@ -1,0 +1,41 @@
+import asyncio
+import aiohttp
+from bs4 import BeautifulSoup
+
+# Define the URLs to crawl
+urls = [
+    'https://www.example.com/page1',
+    'https://www.example.com/page2',
+    'https://www.example.com/page3',
+    # Add more URLs here
+]
+
+# Define the async function to fetch and parse a single URL
+async def fetch_and_parse(url):
+    async with aiohttp.ClientSession() as session:
+        async with session.get(url) as response:
+            html = await response.text()
+            soup = BeautifulSoup(html, 'html.parser')
+            # Parse the HTML and extract the data you need
+            # For example:
+            title = soup.title.string
+            links = [link.get('href') for link in soup.find_all('a')]
+            return (url, title, links)
+
+# Define the main async function to crawl multiple URLs in parallel
+async def crawl():
+    tasks = []
+    async with aiohttp.ClientSession() as session:
+        for url in urls:
+            task = asyncio.ensure_future(fetch_and_parse(url))
+            tasks.append(task)
+        results = await asyncio.gather(*tasks)
+    # Process the results and do something with the extracted data
+    # For example:
+    for result in results:
+        print(result[0], result[1], result[2])
+
+# Run the main async function
+if __name__ == '__main__':
+    loop = asyncio.get_event_loop()
+    loop.run_until_complete(crawl())
